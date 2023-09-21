@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <tchar.h>
 #include "QWinHost.h"
+#include "eventlurker.h"
 
 #include <QDebug>
 #include <QString>
@@ -99,10 +100,14 @@ int main( int argc, char *argv[] )
     qputenv("QT_ENABLE_HIGHDPI_SCALING", "0");
     //---------------------------------------------------------------------
 
+    EventLurker eventLurker;
+
     QApplication app( argc, argv );
 
     // Set up the winHost - native win32 window container.
     QWinHost* winHost = new QWinHost();
+    winHost->setObjectName("winHost");
+    winHost->installEventFilter(&eventLurker);
     HWND embeddedWin = createWin32Window(winHost);
     if (!embeddedWin) {
         delete winHost;
@@ -112,6 +117,8 @@ int main( int argc, char *argv[] )
 
     // Create Top Level MainWindow
     auto mainWindow = new QMainWindow();
+    mainWindow->setObjectName("mainWindow");
+    mainWindow->installEventFilter(&eventLurker);
     mainWindow->setWindowTitle(QString("TLW Surface Change on Dock - Qt%1.%2.%3").arg(QT_VERSION_MAJOR).arg(QT_VERSION_MINOR).arg(QT_VERSION_PATCH));
     mainWindow->setCentralWidget(winHost);
 
@@ -123,6 +130,8 @@ int main( int argc, char *argv[] )
 
     // Create dock widget for hosting a QML window
     auto dockWidget = new QDockWidget("QML Dock Window", mainWindow);
+    dockWidget->setObjectName("dockWidget");
+    dockWidget->installEventFilter(&eventLurker);
     dockWidget->setAllowedAreas(Qt::AllDockWidgetAreas);
     mainWindow->addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
     dockWidget->setFloating(true);
@@ -139,6 +148,8 @@ int main( int argc, char *argv[] )
     // Create OpenGl surface based QML window
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
     auto quickWidget = new QQuickWidget(dockWidget);
+    quickWidget->setObjectName("quickWidget");
+    quickWidget->installEventFilter(&eventLurker);
     quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
     quickWidget->setSource(QUrl("qrc:///Panel.qml"));
     dockWidget->setWidget(quickWidget);

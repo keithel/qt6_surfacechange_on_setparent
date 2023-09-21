@@ -16,6 +16,8 @@ set(PROJECT_SOURCES
         main.cpp
         qwinhost.cpp
         qwinhost.h
+        eventlurker.cpp
+        eventlurker.h
 )
 
 qt_add_executable(Qt6_5_TLW_SurfaceChangeOnSetParent
