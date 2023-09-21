@@ -57,11 +57,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT message, _In_ WPARAM wPara
     return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-
-int main( int argc, char *argv[] )
-{
-    SetDllDirectory(_T(""));
-
+HWND createWin32Window(QWinHost *winHost) {
     // Register our embedded test window class
     auto hInstance = GetModuleHandle(NULL);
     WNDCLASS wc;
@@ -77,8 +73,25 @@ int main( int argc, char *argv[] )
     wc.lpszClassName = L"EmbeddedWindow";
 
     if (!RegisterClass(&wc))
-        return FALSE;
+        return nullptr;
 
+    // Create native win32 window that gets embedded in our QMainWindow's central area
+    HWND embededWin = CreateWindow(L"EmbeddedWindow", // Predefined class;
+                                   L"EmbeddedWindow", // caption
+                                   WS_TABSTOP | WS_VISIBLE | WS_CHILD, // Styles
+                                   0, // x position
+                                   0, // y position
+                                   0, // Button width
+                                   0, // Button height
+                                   (HWND)winHost->winId(), // Parent window
+                                   nullptr, // No menu.
+                                   hInstance,
+                                   nullptr); // Pointer not needed.
+    return embededWin;
+}
+
+int main( int argc, char *argv[] )
+{
     //---------------------------------------------------------------------
     // Set correct Qt dpi scaling environment
     qputenv("QT_SCALE_FACTOR", "1");
@@ -88,23 +101,14 @@ int main( int argc, char *argv[] )
 
     QApplication app( argc, argv );
 
+    // Set up the winHost - native win32 window container.
     QWinHost* winHost = new QWinHost();
-
-    // Create native win32 window that gets embedded in our QMainWindow's central area
-    HWND embededWin = CreateWindow(L"EmbeddedWindow", // Predefined class;
-        L"EmbeddedWindow", // caption
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD, // Styles
-        0, // x position
-        0, // y position
-        100, // Button width
-        25, // Button height
-        (HWND)winHost->winId(), // Parent window
-        NULL, // No menu.
-        hInstance,
-        NULL); // Pointer not needed.
-
-    winHost->setWindow(embededWin);
-
+    HWND embeddedWin = createWin32Window(winHost);
+    if (!embeddedWin) {
+        delete winHost;
+        return -1;
+    }
+    winHost->setWindow(embeddedWin);
 
     // Create Top Level MainWindow
     auto mainWindow = new QMainWindow();
