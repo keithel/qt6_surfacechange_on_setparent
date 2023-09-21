@@ -1,11 +1,17 @@
 
-#include <QtWidgets/QApplication>
+#include <QApplication>
 #include <windows.h>
 #include <tchar.h>
-#include <qdebug.h>
 #include "QWinHost.h"
-#include <QtWidgets/QtWidgets>
-#include <QtQuickWidgets/QQuickWidget>
+
+#include <QDebug>
+#include <QString>
+#include <QMainWindow>
+#include <QDockWidget>
+#include <QMessageBox>
+#include <QQuickWindow>
+#include <QQuickWidget>
+#include <QUrl>
 
 
 LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT message, _In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -42,15 +48,7 @@ LRESULT CALLBACK WindowProc(_In_ HWND hwnd, _In_ UINT message, _In_ WPARAM wPara
     case WM_DESTROY:
     {
         QString msg = "Warning: Native Center View got destroyed!";
-        qWarning() << msg;
-        //QMessageBox::critical(m, "Error", msg);
-
-        /*MessageBox(
-            NULL,
-            (LPCWSTR) msg.toStdWString().data(),
-            (LPCWSTR) L"Error",
-            MB_OK
-        );*/
+        qWarning().noquote() << msg;
 
         break;
     }
@@ -147,6 +145,7 @@ int main( int argc, char *argv[] )
     // due to the surface type change from RasterSurface to OpenGLSurface
     //---------------------------------------------------------------------
 
-    // Run Qt message loop
-    return app.exec();
+    int ret = app.exec();
+    delete mainWindow;
+    return ret;
 }
